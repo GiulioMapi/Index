@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MAPI Capital Budgeting Game by Giulio</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        margin: 0;
+        padding: 20px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .quiz-container {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        max-width: 800px;
+        width: 100%;
+        margin-bottom: 20px;
+      }
+      h1 {
+        color: #059669;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .landing-content,
+      .question,
+      .score,
+      .round-info {
+        text-align: center;
+      }
+      .options {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      button {
+        background-color: #059669;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 15px 20px;
+        font-size: 1em;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      button:hover {
+        background-color: #047857;
+      }
+      .footer-message {
+        text-align: center;
+        color: #666;
+        margin-top: auto;
+        padding: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="quiz-container" id="startScreen">
+      <h1>MAPI Capital Budgeting Game by Giulio</h1>
+      <div class="landing-content">
+        <p>¡Bienvenido al juego de MAPI Capital Budgeting!</p>
+        <p>
+          Este juego te ayuda a reforzar conceptos clave del curso MAPI Capital
+          Budgeting de Carlos Brenner y Rodrigo Bocanegra. Completa la ronda y
+          prueba tus conocimientos en evaluación de proyectos, WACC, análisis de
+          sensibilidad y más.
+        </p>
+      </div>
+      <button onclick="startGame()">¡Comenzar el Juego!</button>
+    </div>
+
+    <div class="quiz-container" id="quizScreen" style="display: none">
+      <h1>MAPI Capital Budgeting Game</h1>
+      <div class="round-info" id="roundInfo"></div>
+      <div id="quiz">
+        <p class="question" id="question"></p>
+        <div class="options" id="options"></div>
+        <p class="score" id="score"></p>
+      </div>
+    </div>
+
+    <div class="footer-message">
+      Desarrollado con ❤️ por Giulio Pierattini para la comunidad MAPI
+    </div>
+
+    <script>
+      const questions = [
+        // Ronda 1
+        {
+          question:
+            "¿Cuál es el flujo de caja relevante para evaluar un proyecto?",
+          options: [
+            "Flujo de caja neto",
+            "Flujo de caja operativo",
+            "Flujo libre o free cash flow",
+            "Flujo de caja distribuido a accionistas",
+          ],
+          correct: 2,
+        },
+        {
+          question:
+            "¿Por qué es más difícil estimar lo que ocurre cuando NO tomamos una decisión?",
+          options: [
+            "Las decisiones tomadas son inmediatas",
+            "Solo conocemos el resultado de la opción elegida",
+            "Todas las decisiones tienen resultados idénticos",
+            "Ambas rutas son mutuamente excluyentes",
+          ],
+          correct: 1,
+        },
+        {
+          question:
+            "¿Cuál es el propósito principal de calcular el WACC en la evaluación de proyectos?",
+          options: [
+            "Comparar con competidores",
+            "Estimar el costo de oportunidad",
+            "Determinar la tasa de descuento",
+            "Analizar la rentabilidad total",
+          ],
+          correct: 2,
+        },
+        {
+          question:
+            "¿Qué indica un VPN positivo en la evaluación de una inversión?",
+          options: [
+            "Flujos futuros valen menos hoy",
+            "Flujos futuros valen lo mismo que su costo",
+            "Flujos valen más hoy que cuestan",
+            "Proyecto sin beneficio",
+          ],
+          correct: 2,
+        },
+        {
+          question:
+            "¿Cuáles son los estados financieros principales utilizados para evaluar el desempeño financiero?",
+          options: [
+            "Estado de resultados, balance general y estado de flujo de efectivo",
+            "Estado de capital contable y estado de pérdidas",
+            "Balance general y estado de situación patrimonial",
+            "Estado de flujos de inversión y balance de situación",
+          ],
+          correct: 0,
+        },
+        {
+          question:
+            "¿Cuál afirmación es correcta sobre la perpetuidad en la valoración de inversiones?",
+          options: [
+            "Debe usarse en cualquier proyecto",
+            "Puede constituir más del 60-70% del activo",
+            "Usar para cualquier empresa sin importar el riesgo",
+            "Es un valor fijo que no cambia",
+          ],
+          correct: 1,
+        },
+        {
+          question:
+            "¿Qué costos incluir en el Estado de Resultados para decisiones en la evaluación de un negocio?",
+          options: [
+            "Costos hundidos",
+            "Costos de oportunidad",
+            "Ganancia neta",
+            "Gastos contables históricos",
+          ],
+          correct: 1,
+        },
+        {
+          question:
+            "¿Cuáles son los dos principios fundamentales en la valuación del dinero en el tiempo?",
+          options: [
+            "Dinero con riesgo vale más y dinero hoy vale más",
+            "Dinero vale más mañana y el dinero con riesgo es valioso",
+            "Dinero vale más hoy y dinero seguro vale más",
+            "Dinero con riesgo vale más y dinero mañana vale más",
+          ],
+          correct: 2,
+        },
+        {
+          question:
+            "¿Cuál situación NO es adecuada para el uso de la perpetuidad en la valoración?",
+          options: [
+            "Edificio para venderse en su totalidad",
+            "Bono con intereses perpetuos",
+            "Empresa establecida con expectativas de continuidad",
+            "Proyecto de infraestructura sin fin específico",
+          ],
+          correct: 0,
+        },
+        {
+          question:
+            "¿Por qué se favorece VPN más alto frente a TIR mayor en proyectos excluyentes?",
+          options: [
+            "TIR siempre es realista",
+            "VPN usa costo de oportunidad",
+            "TIR muestra riqueza en términos monetarios",
+            "VPN para proyectos pequeños y TIR para grandes",
+          ],
+          correct: 1,
+        },
+
+        // Ronda 2
+        {
+          question:
+            "¿Qué representa el Valor Presente Neto (VPN) en la evaluación de proyectos?",
+          options: [
+            "Diferencia entre costo inicial y flujos descontados",
+            "Tasa de interés de descuento",
+            "Comparación de valor hoy y costo en futuro",
+            "Valor actual menos inversión inicial",
+          ],
+          correct: 0,
+        },
+        {
+          question:
+            "¿Qué representa la Tasa Interna de Retorno (TIR) en proyectos?",
+          options: [
+            "Tasa que hace que VPN sea cero",
+            "Valor presente de flujos descontados",
+            "Tasa de crecimiento sin flujos",
+            "Valor actual descontado al costo de capital",
+          ],
+          correct: 0,
+        },
+        {
+          question:
+            "¿Qué mide el Índice de Rentabilidad (IR) en la evaluación de proyectos?",
+          options: [
+            "Relación entre VP de flujos futuros e inversión inicial",
+            "VP de flujos descontados",
+            "Tasa de retorno esperada",
+            "Diferencia entre valor actual y inversión",
+          ],
+          correct: 0,
+        },
+        {
+          question: "¿Cuál afirmación es correcta sobre el CAP Rate?",
+          options: [
+            "Incluye financiamiento y crecimiento de valor",
+            "Varía solo según ubicación",
+            "Útil para comparar propiedades sin financiamiento",
+            "Propiedades industriales tienen CAP más bajo",
+          ],
+          correct: 2,
+        },
+        {
+          question: "¿Qué aspecto no considera el Return on Equity (ROE)?",
+          options: [
+            "Eficiencia en generación de ganancias",
+            "Endeudamiento y riesgo asociados",
+            "Valor de inversiones a largo plazo",
+            "Comparación con empresas en sectores diferentes",
+          ],
+          correct: 1,
+        },
+        {
+          question: "¿Cuál es una limitación del método de Periodo de Repago?",
+          options: [
+            "No toma en cuenta valor del dinero en el tiempo",
+            "Solo considera flujos iniciales",
+            "No útil para proyectos con diferentes inversiones",
+            "Enfocado solo en riesgo de liquidez",
+          ],
+          correct: 0,
+        },
+        {
+          question: "¿Qué ventaja tiene el periodo de repago descontado?",
+          options: [
+            "Considera valor del dinero al descontar flujos",
+            "Evalúa riesgo con más precisión",
+            "Considera flujos después del repago",
+            "Fácil de interpretar sin descontar flujos",
+          ],
+          correct: 0,
+        },
+        {
+          question: "¿Cómo afecta la inflación en la evaluación de proyectos?",
+          options: [
+            "Aumenta costos fijos",
+            "No impacta en flujos esperados",
+            "Afecta ingresos y egresos, ajustando flujos y tasa",
+            "Solo afecta ingresos",
+          ],
+          correct: 2,
+        },
+        {
+          question:
+            "¿Por qué es importante no incluir cargos por intereses en flujos de un proyecto?",
+          options: [
+            "No son costo relevante",
+            "Duplican costos por la tasa de descuento",
+            "Afectan directamente ingresos",
+            "Considerar solo flujos positivos",
+          ],
+          correct: 1,
+        },
+        {
+          question:
+            "¿Por qué es crucial el capital de trabajo en evaluación de inversiones?",
+          options: [
+            "Solo refleja en estados financieros",
+            "Representa ingresos futuros",
+            "Afecta viabilidad del proyecto",
+            "No impacta en flujo de efectivo",
+          ],
+          correct: 2,
+        },
+
+        // Ronda 3
+        {
+          question:
+            "¿Cuál afirmación es verdadera respecto a las depreciaciones y amortizaciones?",
+          options: [
+            "Son gastos en efectivo",
+            "Asignación contable de pérdida de valor",
+            "Aumentan utilidad neta",
+            "Solo para activos fijos",
+          ],
+          correct: 1,
+        },
+        {
+          question: "¿Qué son los costos hundidos?",
+          options: [
+            "Recuperables con nueva inversión",
+            "Considerados en evaluación de inversiones",
+            "Gastos pasados sin recuperar",
+            "Costos evitables",
+          ],
+          correct: 2,
+        },
+        {
+          question:
+            "¿Qué características distinguen las depreciaciones y amortizaciones?",
+          options: [
+            "Gastos en efectivo que reducen flujo",
+            "Asignación de costo proporcionando escudo fiscal",
+            "Solo en activos intangibles",
+            "Aumentan valor en libros",
+          ],
+          correct: 1,
+        },
+        {
+          question:
+            "¿Por qué es importante el costo de oportunidad en la evaluación?",
+          options: [
+            "Reflejado en estados financieros",
+            "Identifica gasto total",
+            "Valora alternativas sacrificadas",
+            "Asegura cobertura de costos fijos",
+          ],
+          correct: 2,
+        },
+        {
+          question: "¿Qué es el capital de trabajo en términos contables?",
+          options: [
+            "Activos fijos menos pasivos a largo plazo",
+            "Activos corrientes menos pasivos corrientes",
+            "Ingresos menos costos",
+            "Activos totales menos pasivos totales",
+          ],
+          correct: 1,
+        },
+        {
+          question:
+            "¿Qué implica la ubicación de flujos al final del año en proyectos?",
+          options: [
+            "Permite análisis de flujos diarios",
+            "No afecta precisión del modelo",
+            "Aumenta complejidad en ingresos",
+            "Simplifica análisis y rendimientos anuales",
+          ],
+          correct: 3,
+        },
+        {
+          question:
+            "¿Qué sucede si el valor de venta de un activo supera su valor en libros?",
+          options: [
+            "Pérdida de capital",
+            "Ganancia de capital",
+            "Sin impacto contable",
+            "Ingreso ordinario",
+          ],
+          correct: 1,
+        },
+        {
+          question:
+            "¿Qué representa “libre” en flujo de caja libre para la empresa (FCFF)?",
+          options: [
+            "Efectivo no sujeto a impuestos",
+            "Efectivo para distribuido tras cubrir costos",
+            "Flujo generado por operaciones",
+            "Ingresos reinvertibles sin restricciones",
+          ],
+          correct: 1,
+        },
+        {
+          question: "¿Qué es el WACC?",
+          options: [
+            "Weighted Average Capital Cost",
+            "Weighted Annual Cost of Capital",
+            "Weighted Average Cost of Capital",
+            "Weighted Average Cash Cost",
+          ],
+          correct: 2,
+        },
+        {
+          question: "¿Cuál es el propósito de la simulación de Monte Carlo?",
+          options: [
+            "Maximizar ganancias",
+            "Cuantificar riesgo",
+            "Predecir precio de acciones",
+            "Análisis de mercado",
+          ],
+          correct: 1,
+        },
+
+        // Ronda 4
+        {
+          question: "¿Qué es el análisis de sensibilidad?",
+          options: [
+            "Evaluación de rentabilidad",
+            "Medición de cambios en variables",
+            "Método para calcular costo",
+            "Análisis de tasas de interés",
+          ],
+          correct: 1,
+        },
+        {
+          question:
+            "¿Por qué identificar variables de impacto en el análisis de sensibilidad?",
+          options: [
+            "Reducir costos operativos",
+            "Evaluar riesgo de inversión",
+            "Maximizar rendimiento",
+            "Determinar tiempo de recuperación",
+          ],
+          correct: 1,
+        },
+        {
+          question: "¿Qué se mantiene fijo en el análisis de sensibilidad?",
+          options: [
+            "Todas las variables",
+            "Variable de interés",
+            "Variable objetivo",
+            "Variables irrelevantes",
+          ],
+          correct: 0,
+        },
+        {
+          question:
+            "¿Cuáles son los escenarios comunes en el análisis de inversiones?",
+          options: [
+            "Normal, optimista y pesimista",
+            "Alto riesgo y bajo riesgo",
+            "Corto, mediano y largo plazo",
+          ],
+          correct: 0,
+        },
+        {
+          question:
+            "¿Cómo se valora generalmente los bienes raíces comerciales?",
+          options: [
+            "Por tamaño de la propiedad",
+            "Basado en cap rates",
+            "Por cantidad de empleados",
+            "Por duración del contrato",
+          ],
+          correct: 1,
+        },
+        {
+          question: "¿Qué calcula la TIR?",
+          options: [
+            "Costo total de inversión",
+            "Retorno que logra VPN cero",
+            "Ingreso neto de operación",
+            "Tasa de capitalización",
+          ],
+          correct: 1,
+        },
+        {
+          question:
+            "¿Mejor forma de generar retornos superiores en bienes raíces?",
+          options: [
+            "Mantener propiedad",
+            "Optimizar uso de propiedad",
+            "Reducir precio de venta",
+            "Vender rápidamente",
+          ],
+          correct: 1,
+        },
+        {
+          question:
+            "¿Cómo se determina el valor de una propiedad con NOI y tasa de capitalización?",
+          options: [
+            "Suma el NOI a la tasa",
+            "Multiplica NOI por tasa",
+            "Divide NOI por tasa",
+            "Resta NOI de la tasa",
+          ],
+          correct: 2,
+        },
+        {
+          question: "¿Qué implica el método de comparables en valoración?",
+          options: [
+            "Evaluar tamaño",
+            "Comparar propiedades vendidas en área",
+            "Analizar ubicación",
+            "Estimar costos de mantenimiento",
+          ],
+          correct: 1,
+        },
+        {
+          question: "¿Qué implica un análisis DCF?",
+          options: [
+            "Un solo flujo de efectivo",
+            "Más simple",
+            "Solo propiedades residenciales",
+            "Considera todos los elementos",
+          ],
+          correct: 3,
+        },
+
+        // Ronda 5
+        {
+          question: "¿Por qué la TIR es importante en evaluación de proyectos?",
+          options: [
+            "Calcula ingresos netos",
+            "Mide retorno que iguala VPN a cero",
+            "Evalúa crecimiento de activos",
+            "Calcula tasas de interés en mercado",
+          ],
+          correct: 1,
+        },
+        {
+          question: "¿Qué implica un WACC bajo para una empresa?",
+          options: [
+            "Mayor riesgo de inversión",
+            "Más atractivo para inversión",
+            "Desventaja competitiva",
+            "Altos costos operativos",
+          ],
+          correct: 1,
+        },
+        {
+          question: "¿Qué representa el cash flow operativo?",
+          options: [
+            "Efectivo antes de impuestos",
+            "Flujo neto de operaciones",
+            "Ingresos netos menos deudas",
+            "Dinero restante para dividendos",
+          ],
+          correct: 1,
+        },
+        {
+          question: "¿Qué es la depreciación?",
+          options: [
+            "Reducción de ingresos",
+            "Gasto contable que refleja el desgaste de activos",
+            "Incremento de flujo de efectivo",
+            "Aumento de valor de activos",
+          ],
+          correct: 1,
+        },
+        {
+          question: "¿Qué significa optimizar capital en bienes raíces?",
+          options: [
+            "Comprar propiedades baratas",
+            "Vender al menor costo",
+            "Usar activos de manera eficiente",
+            "Evitar impuestos altos",
+          ],
+          correct: 2,
+        },
+        {
+          question: "¿Por qué calcular el EVA es relevante?",
+          options: [
+            "Estima deuda futura",
+            "Mide generación de valor",
+            "Calcula depreciación",
+            "Predice ingresos netos",
+          ],
+          correct: 1,
+        },
+        {
+          question: "¿Qué mide el Índice de Endeudamiento?",
+          options: [
+            "Proporción de deuda vs activos",
+            "Tasa de retorno",
+            "Nivel de flujo neto",
+            "Riesgo de capital",
+          ],
+          correct: 0,
+        },
+        {
+          question: "¿Qué se considera un gasto de capital?",
+          options: [
+            "Costos operativos",
+            "Inversión en activos a largo plazo",
+            "Pago de deuda",
+            "Costos de mano de obra",
+          ],
+          correct: 1,
+        },
+        {
+          question: "¿Qué es el capital de riesgo?",
+          options: [
+            "Inversión en activos seguros",
+            "Fondos invertidos en proyectos de alto riesgo",
+            "Capital para gastos diarios",
+            "Inversión en bonos del gobierno",
+          ],
+          correct: 1,
+        },
+        {
+          question: "¿Cómo se calcula la utilidad neta?",
+          options: [
+            "Ingresos - Costos fijos",
+            "Ingresos - (Costos variables + Costos fijos)",
+            "Ingresos - Gastos de capital",
+            "Ingresos - Deuda",
+          ],
+          correct: 1,
+        },
+
+        // Ronda 6
+        {
+          question: "¿Cuál es una ventaja del análisis de sensibilidad?",
+          options: [
+            "Calcula ingresos futuros",
+            "Mide impacto de variables",
+            "Aumenta ventas",
+            "Reduce gastos operativos",
+          ],
+          correct: 1,
+        },
+        {
+          question: "¿Qué representa el capital de trabajo?",
+          options: [
+            "Activos totales menos deuda",
+            "Activos corrientes menos pasivos corrientes",
+            "Ingresos menos deudas",
+            "Ganancias retenidas",
+          ],
+          correct: 1,
+        },
+        {
+          question: "¿Cuál es el objetivo del flujo de caja proyectado?",
+          options: [
+            "Estimar valor de activos",
+            "Anticipar ingresos futuros",
+            "Calcular depreciación",
+            "Estimar deudas",
+          ],
+          correct: 1,
+        },
+        {
+          question: "¿Por qué es relevante la liquidez en un proyecto?",
+          options: [
+            "Mide valor de acciones",
+            "Asegura pagos a corto plazo",
+            "Calcula costo de capital",
+            "Aumenta ganancias",
+          ],
+          correct: 1,
+        },
+        {
+          question: "¿Qué implica un CAP Rate alto?",
+          options: [
+            "Mayor riesgo y retorno",
+            "Menor retorno",
+            "Igual rendimiento que otros activos",
+            "Bajo riesgo",
+          ],
+          correct: 0,
+        },
+        {
+          question: "¿Qué representa un flujo de caja negativo?",
+          options: [
+            "Pérdidas operativas",
+            "Exceso de capital",
+            "Ganancias retenidas",
+            "Déficit temporal",
+          ],
+          correct: 0,
+        },
+        {
+          question: "¿Cuál es el principal uso de la TIR?",
+          options: [
+            "Comparar inversiones",
+            "Medir flujo neto",
+            "Calcular activos",
+            "Reducir deudas",
+          ],
+          correct: 0,
+        },
+        {
+          question: "¿Qué mide el rendimiento sobre el capital (ROE)?",
+          options: [
+            "Ingresos netos",
+            "Utilidad neta sobre capital",
+            "Deuda total",
+            "Flujo de caja",
+          ],
+          correct: 1,
+        },
+        {
+          question: "¿Por qué se utiliza el método DCF?",
+          options: [
+            "Estimación de valor actual",
+            "Cálculo de ingresos futuros",
+            "Proyección de deudas",
+            "Evaluación de costo promedio",
+          ],
+          correct: 0,
+        },
+        {
+          question: "¿Cuál es el propósito del análisis de riesgo?",
+          options: [
+            "Aumentar ingresos",
+            "Identificar posibles pérdidas",
+            "Reducir costos",
+            "Maximizar retorno",
+          ],
+          correct: 1,
+        },
+      ];
+
+      let currentQuestionIndex = 0;
+      let correctAnswers = 0;
+      let incorrectAnswers = 0;
+
+      function startGame() {
+        document.getElementById("startScreen").style.display = "none";
+        document.getElementById("quizScreen").style.display = "block";
+        showQuestion();
+      }
+
+      function showQuestion() {
+        if (currentQuestionIndex >= questions.length) {
+          showFinalScore();
+          return;
+        }
+
+        const currentQuestion = questions[currentQuestionIndex];
+        document.getElementById("question").textContent =
+          currentQuestion.question;
+        document.getElementById("options").innerHTML = "";
+        document.getElementById("roundInfo").textContent = `Pregunta ${
+          currentQuestionIndex + 1
+        } de ${questions.length}`;
+
+        currentQuestion.options.forEach((option, index) => {
+          const button = document.createElement("button");
+          button.textContent = option;
+          button.onclick = () =>
+            handleAnswer(index === currentQuestion.correct);
+          document.getElementById("options").appendChild(button);
+        });
+
+        document.getElementById(
+          "score"
+        ).textContent = `Correctas: ${correctAnswers} | Incorrectas: ${incorrectAnswers}`;
+      }
+
+      function handleAnswer(isCorrect) {
+        if (isCorrect) correctAnswers++;
+        else incorrectAnswers++;
+
+        currentQuestionIndex++;
+        showQuestion();
+      }
+
+      function showFinalScore() {
+        const totalAnswered = correctAnswers + incorrectAnswers;
+        const percentage = ((correctAnswers / totalAnswered) * 100).toFixed(1);
+
+        document.getElementById("quizScreen").innerHTML = `
+                <div id="finalScore">
+                    <h2>¡Juego Terminado!</h2>
+                    <p>Respuestas correctas: ${correctAnswers}</p>
+                    <p>Respuestas incorrectas: ${incorrectAnswers}</p>
+                    <p>Porcentaje de aciertos: ${percentage}%</p>
+                    <p>Total de preguntas respondidas: ${totalAnswered}</p>
+                    <button onclick="location.reload()">Jugar de Nuevo</button>
+                </div>
+            `;
+      }
+    </script>
+  </body>
+</html>
